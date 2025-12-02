@@ -1,0 +1,69 @@
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+enum Role {
+  USER
+  ADMIN
+}
+
+enum OrderStatus {
+  PENDING
+  PROCESSING
+  COMPLETED
+  CANCELLED
+}
+
+enum CryptoType {
+  BTC
+  ETH
+  USDT
+}
+
+model User {
+  id           String        @id @default(cuid())
+  name         String
+  email        String        @unique
+  passwordHash String
+  role         Role          @default(USER)
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+
+  orders       Order[]
+  bankAccounts BankAccount[]
+}
+
+model Order {
+  id           String       @id @default(cuid())
+  user         User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId       String
+  cryptoType   CryptoType
+  cryptoAmount Float
+  fiatAmount   Float
+  status       OrderStatus  @default(PENDING)
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
+}
+
+model ExchangeRate {
+  id         String      @id @default(cuid())
+  cryptoType CryptoType  @unique
+  rate       Float
+  createdAt  DateTime    @default(now())
+  updatedAt  DateTime    @updatedAt
+}
+
+model BankAccount {
+  id            String   @id @default(cuid())
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId        String
+  bankName      String
+  accountName   String
+  accountNumber String
+  createdAt     DateTime @default(now())
+}
